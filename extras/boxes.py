@@ -1,11 +1,10 @@
 import torch
-from torch.jit.annotations import Tuple
-from torch import Tensor
 import torchvision
+from torch import Tensor
+from torch.jit.annotations import Tuple
 
 
-def nms(boxes, scores, iou_threshold):
-    # type: (Tensor, Tensor, float)
+def nms(boxes: Tensor, scores: Tensor, iou_threshold: float):
     """
     Performs non-maximum suppression (NMS) on the boxes according
     to their intersection-over-union (IoU).
@@ -32,8 +31,7 @@ def nms(boxes, scores, iou_threshold):
     return torch.ops.torchvision.nms(boxes, scores, iou_threshold)
 
 
-def batched_nms(boxes, scores, idxs, iou_threshold):
-    # type: (Tensor, Tensor, Tensor, float)
+def batched_nms(boxes: Tensor, scores: Tensor, idxs: Tensor, iou_threshold: float):
     """
     Performs non-maximum suppression in a batched fashion.
     Each index value correspond to a category, and NMS
@@ -70,8 +68,7 @@ def batched_nms(boxes, scores, idxs, iou_threshold):
     return keep
 
 
-def remove_small_boxes(boxes, min_size):
-    # type: (Tensor, float)
+def remove_small_boxes(boxes: Tensor, min_size: float):
     """
     Remove boxes which contains at least one side smaller than min_size.
     Arguments:
@@ -87,8 +84,7 @@ def remove_small_boxes(boxes, min_size):
     return keep
 
 
-def clip_boxes_to_image(boxes, size):
-    # type: (Tensor, Tuple[int, int])
+def clip_boxes_to_image(boxes: Tensor, size: Tuple[int, int]):
     """
     Clip boxes so that they lie inside an image of size `size`.
     Arguments:
@@ -103,10 +99,18 @@ def clip_boxes_to_image(boxes, size):
     height, width = size
 
     if torchvision._is_tracing():
-        boxes_x = torch.max(boxes_x, torch.tensor(0, dtype=boxes.dtype, device=boxes.device))
-        boxes_x = torch.min(boxes_x, torch.tensor(width, dtype=boxes.dtype, device=boxes.device))
-        boxes_y = torch.max(boxes_y, torch.tensor(0, dtype=boxes.dtype, device=boxes.device))
-        boxes_y = torch.min(boxes_y, torch.tensor(height, dtype=boxes.dtype, device=boxes.device))
+        boxes_x = torch.max(
+            boxes_x, torch.tensor(0, dtype=boxes.dtype, device=boxes.device)
+        )
+        boxes_x = torch.min(
+            boxes_x, torch.tensor(width, dtype=boxes.dtype, device=boxes.device)
+        )
+        boxes_y = torch.max(
+            boxes_y, torch.tensor(0, dtype=boxes.dtype, device=boxes.device)
+        )
+        boxes_y = torch.min(
+            boxes_y, torch.tensor(height, dtype=boxes.dtype, device=boxes.device)
+        )
     else:
         boxes_x = boxes_x.clamp(min=0, max=width)
         boxes_y = boxes_y.clamp(min=0, max=height)
@@ -153,7 +157,16 @@ def box_iou(boxes1, boxes2):
     iou = inter / (area1[:, None] + area2 - inter).type(torch.float32)
     return iou
 
+
 def test():
-    a = torch.tensor([319.73915, 674.9350, 272.4419, 656.2753]).view(1,-1).type(torch.float64)
-    b = torch.tensor([319.7395, 674.9350, 272.4419, 656.2753]).view(1,-1).type(torch.float64)
-    print(box_iou(a, b)) 
+    a = (
+        torch.tensor([319.73915, 674.9350, 272.4419, 656.2753])
+        .view(1, -1)
+        .type(torch.float64)
+    )
+    b = (
+        torch.tensor([319.7395, 674.9350, 272.4419, 656.2753])
+        .view(1, -1)
+        .type(torch.float64)
+    )
+    print(box_iou(a, b))
